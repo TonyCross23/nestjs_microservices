@@ -1,8 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@app/prisma';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class OrderServiceService {
-  getHello(): string {
-    return 'Hello World!';
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject('PRODUCT_SERVICE') private readonly productClient: ClientProxy,
+    private readonly amqpConnection: AmqpConnection,
+  ) { }
+
+  async createOrder(data: { userId: string; items: any[] }) {
+    const stockRes: any = await firstValueFrom(
+      this.productClient.send({ cmd: 'reserve_stock' }, { items: data.items })
+    );
+
+    if (!stockRes.success) return { success: false, message: stockRes.message };
+
+    const order = await this.prisma.order.create({
+      data: {
+        userId: data.userId,
+        totalAmount: stockRes.totalAmount,
+        items: { create: stockRes.items },
+      },
+    });
+
+    await this.amqpConnection.publish('orders_exchange', 'order.created', {
+      orderId: order.id,
+      userId: order.userId,
+    });
+
+    return { success: true, order };
   }
 }
