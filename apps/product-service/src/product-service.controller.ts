@@ -1,6 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import { ProductServiceService } from './product-service.service';
+import { ProductDto } from '../dto/product.dto';
 
 @Controller()
 export class ProductServiceController {
@@ -12,7 +13,7 @@ export class ProductServiceController {
   }
 
   @MessagePattern({ cmd: 'create_product' }) 
-  createProduct(data: any) { 
+  createProduct(data: ProductDto) { 
     return this.productService.createProduct(data); 
   }
 

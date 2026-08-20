@@ -1,5 +1,6 @@
 import { PrismaService } from '@app/prisma';
 import { Injectable } from '@nestjs/common';
+import { ProductDto } from '../dto/product.dto';
 
 export interface ReservedItem {
   productId: string;
@@ -15,7 +16,7 @@ export class ProductServiceService {
     return this.prisma.product.findMany()
   }
 
-  async createProduct(data: { name: string; price: number; stock: number }) {
+  async createProduct(data: ProductDto) {
     return this.prisma.product.create({
       data: {
         name: data.name,

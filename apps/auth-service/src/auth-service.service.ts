@@ -2,6 +2,8 @@ import { PrismaService } from '@app/prisma';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from "bcrypt";
+import { LoginDto, RegisterDto } from '../dto/auth-service.dto';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class AuthServiceService {
@@ -10,7 +12,19 @@ export class AuthServiceService {
     private readonly prisma: PrismaService,
   ) { }
 
-  async register(data: any) {
+  async register(data: RegisterDto) {
+
+    const existingUser = await this.prisma.user.findUnique({ 
+      where: { email: data.email }
+    })
+
+    if(existingUser) {
+        throw new RpcException({
+        statusCode: 400,
+        message: 'User already exists'
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
     const user = await this.prisma.user.create({
       data: {
@@ -27,11 +41,14 @@ export class AuthServiceService {
     };
   }
 
-  async login(data: any) {
+  async login(data: LoginDto) {
     const user = await this.prisma.user.findUnique({ where: { email: data.email } });
     
     if (!user || !(await bcrypt.compare(data.password, user.password))) {
-      return { error: 'Invalid credentials' };
+      throw new RpcException({
+        statusCode: 400,
+        message: 'Invalid credentials'
+      });
     }
 
     return { token: this.jwtService.sign({ sub: user.id, email: user.email }) };

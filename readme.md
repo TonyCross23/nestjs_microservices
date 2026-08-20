@@ -170,16 +170,6 @@ POST /products/reserve
 }
 ```
 
-**curl:**
-```bash
-curl -X POST http://localhost:3000/products/reserve \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"items": [{"productId": "product-uuid-here", "quantity": 2}]}'
-```
-
-> Note: this route doesn't exist in `ApiGatewayController` yet — needs to be added if you want to call `reserveStock` directly instead of through `/orders`.
-
 ---
 
 ## Order Endpoints
