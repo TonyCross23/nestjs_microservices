@@ -120,7 +120,8 @@ GET /products
 
 **curl:**
 ```bash
-curl http://localhost:3000/products
+curl http://localhost:3000/products \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ---

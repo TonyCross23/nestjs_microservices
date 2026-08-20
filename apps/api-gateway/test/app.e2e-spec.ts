@@ -1,24 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { ApiGatewayModule } from './../src/api-gateway.module';
+import { of } from 'rxjs';
+import request from 'supertest';
+import { ApiGatewayController } from './../src/api-gateway.controller';
 
 describe('ApiGatewayController (e2e)', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [ApiGatewayModule],
+      controllers: [ApiGatewayController],
+      providers: [
+        { provide: 'AUTH_SERVICE', useValue: { send: jest.fn(() => of({})) } },
+        { provide: 'PRODUCT_SERVICE', useValue: { send: jest.fn(() => of({})) } },
+        { provide: 'ORDER_SERVICE', useValue: { send: jest.fn(() => of({})) } },
+      ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('/auth/register (POST)', () => {
     return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+      .post('/auth/register')
+      .send({ email: 'user@example.com', password: 'secret1', name: 'User' })
+      .expect(201)
+      .expect({});
   });
 });

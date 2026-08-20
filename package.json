@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build api-gateway && nest build auth-service && nest build product-service && nest build order-service",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -17,8 +17,12 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./apps/microservices/test/jest-e2e.json",
-    "seed": "ts-node prisma/seed.ts"
+    "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
+    "seed": "ts-node prisma/seed.ts",
+    "migrate:write": "prisma migrate deploy",
+    "migrate:all": "pnpm migrate:write",
+    "studio:write": "prisma studio --port 5555",
+    "studio:read": "cross-env DATABASE_URL_WRITE=\"postgresql://root:password@localhost:5439/main_db?schema=public\" prisma studio --port 5556"
   },
   "dependencies": {
     "@golevelup/nestjs-rabbitmq": "^9.0.2",
@@ -51,6 +55,7 @@
     "@types/node": "^24.0.0",
     "@types/pg": "^8.23.1",
     "@types/supertest": "^7.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -79,7 +84,7 @@
       "ts"
     ],
     "rootDir": ".",
-    "testRegex": ".*\\.spec\\.ts$",
+    "testRegex": ".*/src/.*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
@@ -93,7 +98,9 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@app/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1"
+      "^@app/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1",
+      "^apps/(.*)$": "<rootDir>/apps/$1",
+      "^generated/(.*)$": "<rootDir>/generated/$1"
     }
   }
 }

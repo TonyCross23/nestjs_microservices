@@ -10,6 +10,49 @@ services:
       POSTGRES_DB: main_db
     ports:
       - '5438:5432'
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c max_replication_slots=10
+      -c hot_standby=on
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./pg-init/init-replication.sh:/docker-entrypoint-initdb.d/init-replication.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d main_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  readonly_postgres:
+    image: postgres:15-alpine
+    container_name: ms_postgres_readonly
+    user: postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: main_db
+      PGPASSWORD: password
+    ports:
+      - '5439:5432'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - readonly_postgres_data:/var/lib/postgresql/data
+    entrypoint: >
+      bash -c "
+      if [ -z \"$(ls -A /var/lib/postgresql/data)\" ]; then
+        until pg_basebackup -h postgres -p 5432 -D /var/lib/postgresql/data -U root -Fp -Xs -P -R;
+        do
+          echo 'Waiting for primary to be ready...';
+          sleep 2;
+        done;
+        chmod 700 /var/lib/postgresql/data;
+      fi;
+      exec postgres
+      "
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -17,3 +60,7 @@ services:
     ports:
       - '5672:5672'
       - '15672:15672'
+
+volumes:
+  postgres_data:
+  readonly_postgres_data:

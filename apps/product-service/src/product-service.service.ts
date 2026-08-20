@@ -1,6 +1,7 @@
-import { PrismaService } from '@app/prisma';
 import { Injectable } from '@nestjs/common';
 import { ProductDto } from '../dto/product.dto';
+import { PrismaServiceWrite } from '@app/prisma';
+import { PrismaReadService } from '@app/prisma/prisma-read.service';
 
 export interface ReservedItem {
   productId: string;
@@ -10,14 +11,17 @@ export interface ReservedItem {
 
 @Injectable()
 export class ProductServiceService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prismaWrite: PrismaServiceWrite,
+    private readonly prismaRead: PrismaReadService
+  ) { }
 
   async getProducts() {
-    return this.prisma.product.findMany()
+    return this.prismaRead.product.findMany()
   }
 
   async createProduct(data: ProductDto) {
-    return this.prisma.product.create({
+    return this.prismaWrite.product.create({
       data: {
         name: data.name,
         price: data.price,
@@ -27,7 +31,7 @@ export class ProductServiceService {
   }
 
   async reserveStock(items: { productId: string; quantity: number }[]) {
-    return this.prisma.$transaction(async (tx) => {
+    return this.prismaWrite.$transaction(async (tx) => {
       let totalAmount = 0;
 
       const orderItems: ReservedItem[] = [];
