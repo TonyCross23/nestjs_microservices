@@ -15,6 +15,16 @@ export class ProductServiceService {
     return this.prisma.product.findMany()
   }
 
+  async createProduct(data: { name: string; price: number; stock: number }) {
+    return this.prisma.product.create({
+      data: {
+        name: data.name,
+        price: data.price,
+        stock: data.stock
+      }
+    })
+  }
+
   async reserveStock(items: { productId: string; quantity: number }[]) {
     return this.prisma.$transaction(async (tx) => {
       let totalAmount = 0;

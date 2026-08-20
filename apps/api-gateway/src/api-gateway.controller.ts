@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Headers, Inject, Post, UnauthorizedException } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Inject, Post, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import z from 'zod';
 import { ZodValidationPipe } from './zod.pipe';
+import { AuthGuard } from 'apps/auth-service/src/auth.guard';
 
 const RegisterSchema = z.object({
   email: z.string().email(),
@@ -17,27 +18,40 @@ const CreateOrderSchema = z.object({
   })).nonempty(),
 });
 
+const CreateProductSchema = z.object({
+  name: z.string().min(1),
+  price: z.number().positive(),
+  description: z.string().optional(),
+  stock: z.number().int().nonnegative(),
+});
+
 @Controller()
 export class ApiGatewayController {
   constructor(
     @Inject('AUTH_SERVICE') private authClient: ClientProxy,
     @Inject('PRODUCT_SERVICE') private productClient: ClientProxy,
     @Inject('ORDER_SERVICE') private orderClient: ClientProxy,
-  ) {}
+  ) { }
 
   @Post('auth/register')
   register(@Body(new ZodValidationPipe(RegisterSchema)) body: any) {
-    return this.authClient.send({ cmd: 'register'}, body)
+    return this.authClient.send({ cmd: 'register' }, body)
   }
 
   @Post('auth/login')
   login(@Body() body: any) {
-    return this.authClient.send({ cmd: 'login'}, body)
+    return this.authClient.send({ cmd: 'login' }, body)
   }
 
   @Get('products')
   getProducts() {
-    return this.productClient.send({ cmd: 'get_products'}, {})
+    return this.productClient.send({ cmd: 'get_products' }, {})
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('products')
+  createProduct(@Body(new ZodValidationPipe(CreateProductSchema)) body: any) {
+    return this.productClient.send({ cmd: 'create_product' }, body);
   }
 
   @Post('orders')

@@ -11,6 +11,11 @@ export class ProductServiceController {
     return this.productService.getProducts(); 
   }
 
+  @MessagePattern({ cmd: 'create_product' }) 
+  createProduct(data: any) { 
+    return this.productService.createProduct(data); 
+  }
+
   @MessagePattern({ cmd: 'reserve_stock' }) 
   reserveStock(data: any) { 
     return this.productService.reserveStock(data.items); 

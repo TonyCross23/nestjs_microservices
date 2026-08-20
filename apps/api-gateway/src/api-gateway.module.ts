@@ -3,6 +3,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { ApiGatewayController } from './api-gateway.controller';
+import { AuthGuard } from 'apps/auth-service/src/auth.guard';
 
 @Module({
   imports: [
@@ -14,6 +15,9 @@ import { ApiGatewayController } from './api-gateway.controller';
     ])
   ],
   controllers: [ApiGatewayController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard}],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard},
+    AuthGuard
+  ],
 })
 export class ApiGatewayModule {}
