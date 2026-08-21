@@ -7,11 +7,19 @@ import { AuthServiceService } from './auth-service.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true}),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [() => ({
+        database: {
+          writeUrl: process.env.AUTH_DATABASE_URL_WRITE,
+          readUrl: process.env.AUTH_DATABASE_URL_READ,
+        },
+      })],
+    }),
     PrismaModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'supersecretkey123',
-      signOptions: { expiresIn: '1d'}
+      signOptions: { expiresIn: '15m'}
     })
   ],
   controllers: [AuthServiceController],

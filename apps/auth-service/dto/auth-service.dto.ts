@@ -12,6 +12,13 @@ export const loginSchema = z.object({
     password: z.string().min(1, "password is required")
 })
 
+export const createSellerSchema = registerSchema;
+
+export const refreshTokenSchema = z.object({
+    refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
 export class RegisterDto extends createZodDto(registerSchema) { }
 export class LoginDto extends createZodDto(loginSchema) { }
-
+export class CreateSellerDto extends createZodDto(createSellerSchema) { }
+export class RefreshTokenDto extends createZodDto(refreshTokenSchema) { }

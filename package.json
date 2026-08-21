@@ -20,9 +20,12 @@
     "test:e2e": "jest --config ./apps/api-gateway/test/jest-e2e.json",
     "seed": "ts-node prisma/seed.ts",
     "migrate:write": "prisma migrate deploy",
-    "migrate:all": "pnpm migrate:write",
-    "studio:write": "prisma studio --port 5555",
-    "studio:read": "cross-env DATABASE_URL_WRITE=\"postgresql://root:password@localhost:5439/main_db?schema=public\" prisma studio --port 5556"
+    "migrate:all": "bash scripts/migrate-databases.sh",
+    "promote:admin": "bash scripts/promote-admin.sh",
+    "studio:write": "bash scripts/prisma-studio.sh AUTH WRITE 5555",
+    "studio:read": "bash scripts/prisma-studio.sh AUTH READ 5556",
+    "studio:product": "bash scripts/prisma-studio.sh PRODUCT WRITE 5557",
+    "studio:order": "bash scripts/prisma-studio.sh ORDER WRITE 5558"
   },
   "dependencies": {
     "@golevelup/nestjs-rabbitmq": "^9.0.2",

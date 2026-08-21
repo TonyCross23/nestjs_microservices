@@ -9,7 +9,7 @@ export class PrismaReadService extends PrismaClient implements OnModuleInit, OnM
   private pool: Pool;
 
   constructor(config: ConfigService) {
-    const connectionString = config.get<string>('DATABASE_URL_READ');
+    const connectionString = config.getOrThrow<string>('database.readUrl');
 
     const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);

@@ -9,7 +9,7 @@ export class PrismaServiceWrite extends PrismaClient implements OnModuleInit, On
     private pool: Pool;
 
     constructor(config: ConfigService) {
-        const connectionString = config.get<string>('DATABASE_URL_WRITE');
+        const connectionString = config.getOrThrow<string>('database.writeUrl');
 
         const pool = new Pool({ connectionString });
         const adapter = new PrismaPg(pool);
