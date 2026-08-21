@@ -1,10 +1,10 @@
-import { PrismaService } from '@app/prisma';
+import { PrismaServiceWrite } from '@app/prisma';
 import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class OrderConsumer {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaServiceWrite) {}
 
   @RabbitSubscribe({
     exchange: 'orders_exchange',

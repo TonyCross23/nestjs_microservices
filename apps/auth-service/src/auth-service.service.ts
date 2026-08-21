@@ -1,15 +1,15 @@
-import { PrismaService } from '@app/prisma';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import bcrypt from "bcrypt";
 import { LoginDto, RegisterDto } from '../dto/auth-service.dto';
 import { RpcException } from '@nestjs/microservices';
+import { PrismaServiceWrite } from '@app/prisma';
 
 @Injectable()
 export class AuthServiceService {
   constructor(
     private jwtService: JwtService,
-    private readonly prisma: PrismaService,
+    private readonly prisma: PrismaServiceWrite,
   ) { }
 
   async register(data: RegisterDto) {
