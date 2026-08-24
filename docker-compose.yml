@@ -24,7 +24,7 @@ x-postgres-replica: &postgres-replica
   entrypoint: >
     bash -c "
     if [ -z \"$$(ls -A /var/lib/postgresql/data)\" ]; then
-      until pg_basebackup -h $$PRIMARY_HOST -p 5432 -D /var/lib/postgresql/data -U root -Fp -Xs -P -R;
+      until pg_basebackup -h $$PRIMARY_HOST -p 5432 -D /var/lib/postgresql/data -U replicator -Fp -Xs -P -R;
       do
         echo 'Waiting for primary to be ready...';
         sleep 2;
