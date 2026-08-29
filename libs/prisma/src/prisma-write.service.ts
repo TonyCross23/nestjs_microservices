@@ -5,11 +5,11 @@ import { PrismaClient } from 'generated/prisma/client';
 import { Pool } from "pg";
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaServiceWrite extends PrismaClient implements OnModuleInit, OnModuleDestroy {
     private pool: Pool;
 
     constructor(config: ConfigService) {
-        const connectionString = config.get<string>('DATABASE_URL');
+        const connectionString = config.getOrThrow<string>('database.writeUrl');
 
         const pool = new Pool({ connectionString });
         const adapter = new PrismaPg(pool);

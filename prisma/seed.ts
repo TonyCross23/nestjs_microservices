@@ -3,7 +3,13 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client';
 import { Pool } from 'pg';
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const connectionString = process.env.DATABASE_URL_WRITE;
+
+if (!connectionString) {
+  throw new Error('DATABASE_URL_WRITE must be set before running the seed script.');
+}
+
+const pool = new Pool({ connectionString });
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 async function main() {

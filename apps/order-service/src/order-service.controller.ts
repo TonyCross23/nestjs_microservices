@@ -10,5 +10,10 @@ export class OrderServiceController {
   createOrder(data: any) {
     return this.orderService.createOrder(data)
   }
+
+  @MessagePattern({ cmd: 'get_orders' })
+  getOrders() {
+    return this.orderService.listOrders();
+  }
   
 }

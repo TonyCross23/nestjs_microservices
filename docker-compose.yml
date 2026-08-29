@@ -1,19 +1,121 @@
-version: '3.8'
+x-postgres-primary: &postgres-primary
+  image: postgres:15-alpine
+  environment: &postgres-environment
+    POSTGRES_USER: root
+    POSTGRES_PASSWORD: password
+  command: >
+    postgres
+    -c wal_level=replica
+    -c max_wal_senders=10
+    -c max_replication_slots=10
+    -c hot_standby=on
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U root -d $$POSTGRES_DB"]
+    interval: 5s
+    timeout: 5s
+    retries: 5
+
+x-postgres-replica: &postgres-replica
+  image: postgres:15-alpine
+  user: postgres
+  environment:
+    <<: *postgres-environment
+    PGPASSWORD: password
+  entrypoint: >
+    bash -c "
+    if [ -z \"$$(ls -A /var/lib/postgresql/data)\" ]; then
+      until pg_basebackup -h $$PRIMARY_HOST -p 5432 -D /var/lib/postgresql/data -U replicator -Fp -Xs -P -R;
+      do
+        echo 'Waiting for primary to be ready...';
+        sleep 2;
+      done;
+      chmod 700 /var/lib/postgresql/data;
+    fi;
+    exec postgres
+    "
 
 services:
-  postgres:
-    image: postgres:15-alpine
-    container_name: ms_postgres
+  auth_postgres:
+    <<: *postgres-primary
+    container_name: ms_auth_postgres
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: main_db
-    ports:
-      - '5438:5432'
+      <<: *postgres-environment
+      POSTGRES_DB: auth_db
+    ports: ['5444:5432']
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+      - ./pg-init/init-replication.sh:/docker-entrypoint-initdb.d/init-replication.sh:ro
+
+  auth_postgres_replica:
+    <<: *postgres-replica
+    container_name: ms_auth_postgres_replica
+    environment:
+      <<: *postgres-environment
+      PGPASSWORD: password
+      PRIMARY_HOST: auth_postgres
+    ports: ['5445:5432']
+    depends_on:
+      auth_postgres:
+        condition: service_healthy
+    volumes: [auth_postgres_replica_data:/var/lib/postgresql/data]
+
+  product_postgres:
+    <<: *postgres-primary
+    container_name: ms_product_postgres
+    environment:
+      <<: *postgres-environment
+      POSTGRES_DB: product_db
+    ports: ['5440:5432']
+    volumes:
+      - product_postgres_data:/var/lib/postgresql/data
+      - ./pg-init/init-replication.sh:/docker-entrypoint-initdb.d/init-replication.sh:ro
+
+  product_postgres_replica:
+    <<: *postgres-replica
+    container_name: ms_product_postgres_replica
+    environment:
+      <<: *postgres-environment
+      PGPASSWORD: password
+      PRIMARY_HOST: product_postgres
+    ports: ['5441:5432']
+    depends_on:
+      product_postgres:
+        condition: service_healthy
+    volumes: [product_postgres_replica_data:/var/lib/postgresql/data]
+
+  order_postgres:
+    <<: *postgres-primary
+    container_name: ms_order_postgres
+    environment:
+      <<: *postgres-environment
+      POSTGRES_DB: order_db
+    ports: ['5442:5432']
+    volumes:
+      - order_postgres_data:/var/lib/postgresql/data
+      - ./pg-init/init-replication.sh:/docker-entrypoint-initdb.d/init-replication.sh:ro
+
+  order_postgres_replica:
+    <<: *postgres-replica
+    container_name: ms_order_postgres_replica
+    environment:
+      <<: *postgres-environment
+      PGPASSWORD: password
+      PRIMARY_HOST: order_postgres
+    ports: ['5443:5432']
+    depends_on:
+      order_postgres:
+        condition: service_healthy
+    volumes: [order_postgres_replica_data:/var/lib/postgresql/data]
 
   rabbitmq:
     image: rabbitmq:3-management
     container_name: ms_rabbitmq
-    ports:
-      - '5672:5672'
-      - '15672:15672'
+    ports: ['5672:5672', '15672:15672']
+
+volumes:
+  auth_postgres_data:
+  auth_postgres_replica_data:
+  product_postgres_data:
+  product_postgres_replica_data:
+  order_postgres_data:
+  order_postgres_replica_data:

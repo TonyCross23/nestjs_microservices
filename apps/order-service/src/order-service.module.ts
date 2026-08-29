@@ -9,7 +9,15 @@ import { OrderConsumer } from './order.consumer';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [() => ({
+        database: {
+          writeUrl: process.env.ORDER_DATABASE_URL_WRITE,
+          readUrl: process.env.ORDER_DATABASE_URL_READ,
+        },
+      })],
+    }),
     PrismaModule,
     ClientsModule.register([
       {
